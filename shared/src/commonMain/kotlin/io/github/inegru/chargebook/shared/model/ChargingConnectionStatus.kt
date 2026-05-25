@@ -3,22 +3,29 @@ package io.github.inegru.chargebook.shared.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+/**
+ * Composite of the Volvo Energy API v2 `chargerConnectionStatus` and
+ * `chargingType` fields. The wire format splits "is the cable plugged in" from
+ * "what kind of charging", but downstream code (session detection, history)
+ * cares about both together, so we collapse them into one enum here.
+ */
 @Serializable
 enum class ChargingConnectionStatus {
-    @SerialName("CONNECTION_STATUS_CONNECTED_AC")
+    @SerialName("CONNECTED_AC")
     CONNECTED_AC,
 
-    @SerialName("CONNECTION_STATUS_CONNECTED_DC")
+    @SerialName("CONNECTED_DC")
     CONNECTED_DC,
 
-    @SerialName("CONNECTION_STATUS_DISCONNECTED")
+    @SerialName("DISCONNECTED")
     DISCONNECTED,
 
-    @SerialName("CONNECTION_STATUS_FAULT")
+    @SerialName("FAULT")
     FAULT,
 
-    @SerialName("CONNECTION_STATUS_UNSPECIFIED")
+    @SerialName("UNSPECIFIED")
     UNSPECIFIED,
 
+    @SerialName("UNKNOWN")
     UNKNOWN,
 }

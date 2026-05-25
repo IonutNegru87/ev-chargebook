@@ -1,7 +1,7 @@
 package io.github.inegru.chargebook.backend.volvo
 
 import io.github.inegru.chargebook.backend.http.safeGet
-import io.github.inegru.chargebook.shared.api.RechargeStatusDto
+import io.github.inegru.chargebook.shared.api.EnergyStateDto
 import io.github.inegru.chargebook.shared.data.VolvoEnergyDataSource
 import io.github.inegru.chargebook.shared.error.DataError
 import io.github.inegru.chargebook.shared.model.ChargingSnapshot
@@ -24,7 +24,7 @@ class KtorVolvoEnergyDataSource(
     override suspend fun rechargeStatus(vin: String): Result<ChargingSnapshot, DataError.Network> {
         val token = tokenProvider()
         return httpClient
-            .safeGet<RechargeStatusDto>(EnergyEndpoints.rechargeStatus(vin)) {
+            .safeGet<EnergyStateDto>(EnergyEndpoints.state(vin)) {
                 bearerAuth(token)
             }
             .map { dto -> dto.toSnapshot(vin) }

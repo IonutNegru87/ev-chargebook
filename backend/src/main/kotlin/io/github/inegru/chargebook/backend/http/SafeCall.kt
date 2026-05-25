@@ -8,10 +8,15 @@ import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.serialization.JsonConvertException
 import java.net.UnknownHostException
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerializationException
+import org.slf4j.LoggerFactory
+
+@PublishedApi
+internal val safeCallLog = LoggerFactory.getLogger("VolvoHttpClient.safeCall")
 
 /**
  * Safe-call helpers — see the **android-error-handling** skill. Adapted for the
@@ -54,17 +59,33 @@ suspend inline fun <reified T> safeCall(
 
 suspend inline fun <reified T> responseToResult(
     response: HttpResponse,
-): Result<T, DataError.Network> = when (response.status.value) {
-    in 200..299 -> Result.Success(response.body<T>())
-    400 -> Result.Error(DataError.Network.BAD_REQUEST)
-    401 -> Result.Error(DataError.Network.UNAUTHORIZED)
-    403 -> Result.Error(DataError.Network.FORBIDDEN)
-    404 -> Result.Error(DataError.Network.NOT_FOUND)
-    408 -> Result.Error(DataError.Network.REQUEST_TIMEOUT)
-    409 -> Result.Error(DataError.Network.CONFLICT)
-    413 -> Result.Error(DataError.Network.PAYLOAD_TOO_LARGE)
-    429 -> Result.Error(DataError.Network.TOO_MANY_REQUESTS)
-    503 -> Result.Error(DataError.Network.SERVICE_UNAVAILABLE)
-    in 500..599 -> Result.Error(DataError.Network.SERVER_ERROR)
-    else -> Result.Error(DataError.Network.UNKNOWN)
+): Result<T, DataError.Network> {
+    val code = response.status.value
+    if (code in 200..299) {
+        return Result.Success(response.body<T>())
+    }
+    // Read the error body once and log it before returning the typed error —
+    // Ktor's logging plugin doesn't capture bodies for non-2xx responses.
+    val body = runCatching { response.bodyAsText() }.getOrDefault("")
+    safeCallLog.warn(
+        "Upstream {} from {}: {}",
+        code,
+        response.call.request.url,
+        body.take(500),
+    )
+    return Result.Error(
+        when (code) {
+            400 -> DataError.Network.BAD_REQUEST
+            401 -> DataError.Network.UNAUTHORIZED
+            403 -> DataError.Network.FORBIDDEN
+            404 -> DataError.Network.NOT_FOUND
+            408 -> DataError.Network.REQUEST_TIMEOUT
+            409 -> DataError.Network.CONFLICT
+            413 -> DataError.Network.PAYLOAD_TOO_LARGE
+            429 -> DataError.Network.TOO_MANY_REQUESTS
+            503 -> DataError.Network.SERVICE_UNAVAILABLE
+            in 500..599 -> DataError.Network.SERVER_ERROR
+            else -> DataError.Network.UNKNOWN
+        }
+    )
 }

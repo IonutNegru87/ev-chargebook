@@ -9,15 +9,24 @@ Operational quirks worth knowing — collected from the feasibility report and f
 - First sign-in requires an OTP via email — same flow as the Volvo app.
 - Refresh tokens on "custom application credentials" have a limited grant period; surface re-auth prompts gracefully.
 
-## EX30-specific gaps
+## EX30-specific field support (Energy API v2)
 
-| Endpoint | EX30 |
+Confirmed by hitting `GET /energy/v2/vehicles/{vin}/state` against a real EX30 in May 2026. The v2 envelope returns each field as `{ status, value, ... }` where `status` is `"OK"` or `"ERROR"`; ERROR responses include a `code` (`PROPERTY_NOT_SUPPORTED` for things the car never has, `PROPERTY_NOT_FOUND` for things temporarily unavailable).
+
+| Field | EX30 |
 |---|---|
-| `target-battery-charge-level` | ❌ unsupported |
-| `charging-current-limit` | ❌ unsupported |
-| `charging-power` | ✅ but may return `FAULT` mid-session |
+| `batteryChargeLevel` | ✅ OK |
+| `electricRange` | ✅ OK |
+| `chargerConnectionStatus` | ✅ OK |
+| `chargingStatus` | ✅ OK |
+| `chargingType` | ✅ OK (NONE / AC / DC) |
+| `chargerPowerStatus` | ✅ OK |
+| `estimatedChargingTimeToTargetBatteryChargeLevel` | ✅ OK |
+| `targetBatteryChargeLevel` | ✅ OK — works in v2, contradicting the v1 feasibility doc |
+| `chargingPower` | ⚠️ `PROPERTY_NOT_FOUND` while disconnected; should populate while charging |
+| `chargingCurrentLimit` | ❌ `PROPERTY_NOT_SUPPORTED` |
 
-Plan for graceful degradation per field — Geely-platform firmware updates have changed what's available over the past year.
+Plan for graceful degradation per field — treat ERROR responses as "field absent for this sample" rather than as hard errors.
 
 ## Rate limits
 

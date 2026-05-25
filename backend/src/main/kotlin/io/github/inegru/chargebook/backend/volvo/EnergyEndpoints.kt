@@ -7,13 +7,11 @@ package io.github.inegru.chargebook.backend.volvo
 object EnergyEndpoints {
     private const val BASE = "/energy/v2/vehicles"
 
-    fun rechargeStatus(vin: String): String = "$BASE/$vin/recharge-status"
-    fun batteryChargeLevel(vin: String): String = "$BASE/$vin/battery-charge-level"
-    fun electricRange(vin: String): String = "$BASE/$vin/electric-range"
-    fun estimatedChargingTime(vin: String): String = "$BASE/$vin/estimated-charging-time"
-    fun chargingConnectionStatus(vin: String): String = "$BASE/$vin/charging-connection-status"
-    fun chargingSystemStatus(vin: String): String = "$BASE/$vin/charging-system-status"
-    fun chargingPower(vin: String): String = "$BASE/$vin/charging-power"
+    /** Composite energy state. Backed by the `energy:state:read` scope. */
+    fun state(vin: String): String = "$BASE/$vin/state"
+
+    /** Discoverability: which fields are supported on this vehicle. */
+    fun capabilities(vin: String): String = "$BASE/$vin/capabilities"
 }
 
 object ConnectedVehicleEndpoints {

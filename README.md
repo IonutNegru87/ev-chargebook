@@ -42,7 +42,7 @@ Once the server is up:
 1. Open <http://localhost:8080/auth/start> in a browser.
 2. Sign in with your Volvo ID. First sign-in for a given account requires the OTP that Volvo emails you.
 3. After consent, Volvo redirects back to `/auth/callback`. The page should say "Signed in".
-4. Hit <http://localhost:8080/api/snapshot/me> — it picks the first VIN on your account, calls `GET /energy/v2/vehicles/{vin}/recharge-status`, and returns the mapped [`ChargingSnapshot`](shared/src/commonMain/kotlin/io/github/inegru/chargebook/shared/model/ChargingSnapshot.kt) as JSON.
+4. Hit <http://localhost:8080/api/snapshot/me> — it picks the first VIN on your account, calls `GET /energy/v2/vehicles/{vin}/state`, and returns the mapped [`ChargingSnapshot`](shared/src/commonMain/kotlin/io/github/inegru/chargebook/shared/model/ChargingSnapshot.kt) as JSON.
 
 Endpoints today:
 

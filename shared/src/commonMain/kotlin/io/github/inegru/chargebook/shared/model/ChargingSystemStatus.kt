@@ -4,30 +4,30 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Mirrors the Volvo Energy API `charging-system-status` enum.
+ * Mirrors the Volvo Energy API v2 `chargingStatus.value` enum.
  *
- * Volvo returns a string; we keep `UNKNOWN` as a forward-compatible sink for values
- * the EX30 firmware adds later.
+ * `UNKNOWN` is a forward-compatible sink for values the EX30 firmware adds later.
  */
 @Serializable
 enum class ChargingSystemStatus {
-    @SerialName("CHARGING_SYSTEM_CHARGING")
+    @SerialName("CHARGING")
     CHARGING,
 
-    @SerialName("CHARGING_SYSTEM_IDLE")
+    @SerialName("IDLE")
     IDLE,
 
-    @SerialName("CHARGING_SYSTEM_DONE")
+    @SerialName("DONE")
     DONE,
 
-    @SerialName("CHARGING_SYSTEM_SCHEDULED")
+    @SerialName("SCHEDULED")
     SCHEDULED,
 
-    @SerialName("CHARGING_SYSTEM_FAULT")
+    @SerialName("FAULT")
     FAULT,
 
-    @SerialName("CHARGING_SYSTEM_UNSPECIFIED")
+    @SerialName("UNSPECIFIED")
     UNSPECIFIED,
 
+    @SerialName("UNKNOWN")
     UNKNOWN,
 }
