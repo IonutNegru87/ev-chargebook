@@ -31,7 +31,7 @@ Patterns are pulled from the team's Android skills (data layer, error handling, 
 ./gradlew :backend:run
 ```
 
-The Gradle wrapper is committed — no system-wide Gradle install needed. Gradle auto-provisions JDK 21 (the build toolchain) on first run.
+The Gradle wrapper is committed — no system-wide Gradle install needed. The build targets JDK 17.
 
 ## Local infra
 

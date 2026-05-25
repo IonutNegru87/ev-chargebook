@@ -14,6 +14,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import org.slf4j.LoggerFactory
 
 /**
  * Builds the Ktor [HttpClient] used to talk to the Volvo Energy API.
@@ -34,7 +35,10 @@ object HttpClientFactory {
             json(Json { ignoreUnknownKeys = true; isLenient = true })
         }
         install(Logging) {
-            logger = Logger.DEFAULT
+            val slf4j = LoggerFactory.getLogger("VolvoHttpClient")
+            logger = object : Logger {
+                override fun log(message: String) = slf4j.info(message)
+            }
             level = LogLevel.INFO
         }
         install(HttpTimeout) {
