@@ -18,14 +18,21 @@ data class DatabaseConfig(
     val password: String,
 )
 
+data class PricingConfig(
+    /** €/kWh applied automatically at session close. `null` disables auto-pricing. */
+    val defaultTariffEurPerKwh: Double?,
+)
+
 data class Env(
     val volvo: VolvoConfig,
     val database: DatabaseConfig,
+    val pricing: PricingConfig,
 ) {
     companion object {
         fun fromConfig(config: ApplicationConfig): Env {
             val volvo = config.config("chargebook.volvo")
             val db = config.config("chargebook.database")
+            val pricing = config.config("chargebook.pricing")
             return Env(
                 volvo = VolvoConfig(
                     clientId = volvo.tryGetString("clientId").orEmpty(),
@@ -40,6 +47,9 @@ data class Env(
                     url = db.property("url").getString(),
                     user = db.property("user").getString(),
                     password = db.property("password").getString(),
+                ),
+                pricing = PricingConfig(
+                    defaultTariffEurPerKwh = pricing.tryGetString("defaultTariffEurPerKwh")?.toDoubleOrNull(),
                 ),
             )
         }

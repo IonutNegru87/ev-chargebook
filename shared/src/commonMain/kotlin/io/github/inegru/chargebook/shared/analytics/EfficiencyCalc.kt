@@ -25,4 +25,23 @@ object EfficiencyCalc {
 
     fun costEur(energyKwh: Double, tariffEurPerKwh: Double): Double =
         energyKwh * tariffEurPerKwh
+
+    /**
+     * Cost net of solar: the kWh paid for is `energyKwh − solarKwh` (clamped to
+     * ≥ 0 to guard against user input that overshoots). Returns `null` when no
+     * tariff is set — we don't pretend a missing tariff means free.
+     */
+    fun costEurNetOfSolar(
+        energyKwh: Double,
+        solarKwh: Double?,
+        tariffEurPerKwh: Double?,
+    ): Double? {
+        if (tariffEurPerKwh == null) return null
+        val billable = (energyKwh - (solarKwh ?: 0.0)).coerceAtLeast(0.0)
+        return billable * tariffEurPerKwh
+    }
+
+    /** Converts a percentage (0..100) into kWh of [energyKwh]. */
+    fun solarKwhFromPct(energyKwh: Double, pct: Double): Double =
+        energyKwh * pct.coerceIn(0.0, 100.0) / 100.0
 }

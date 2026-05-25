@@ -1,8 +1,10 @@
 package io.github.inegru.chargebook.backend.poller
 
 import io.github.inegru.chargebook.backend.auth.AuthRequiredException
+import io.github.inegru.chargebook.backend.config.PricingConfig
 import io.github.inegru.chargebook.backend.persistence.SessionLocalDataSource
 import io.github.inegru.chargebook.backend.persistence.SnapshotLocalDataSource
+import io.github.inegru.chargebook.shared.analytics.EfficiencyCalc
 import io.github.inegru.chargebook.shared.analytics.SessionAggregates
 import io.github.inegru.chargebook.shared.data.VolvoEnergyDataSource
 import io.github.inegru.chargebook.shared.data.VolvoVehiclesDataSource
@@ -44,6 +46,7 @@ class Poller(
     private val sessions: SessionLocalDataSource,
     private val sessionDetector: SessionDetector,
     private val snapshotBus: SnapshotBus,
+    private val pricing: PricingConfig,
     private val authRetryInterval: Duration = 60.seconds,
     private val networkRetryInterval: Duration = 60.seconds,
 ) {
@@ -206,13 +209,19 @@ class Poller(
         }
         val all = priorSnapshots + endSnapshot.copy(sessionId = open.id)
         val agg = SessionAggregates.compute(all)
+        val tariff = pricing.defaultTariffEurPerKwh
+        val energyKwh = agg.energyKwh.takeIf { it > 0.0 }
         val closed = open.copy(
             endedAt = endSnapshot.recordedAt,
             startSocPct = open.startSocPct ?: agg.startSocPct,
             endSocPct = endSnapshot.socPct ?: agg.endSocPct,
-            energyKwh = agg.energyKwh.takeIf { it > 0.0 },
+            energyKwh = energyKwh,
             avgPowerKw = agg.avgPowerKw.takeIf { it > 0.0 },
             peakPowerKw = agg.peakPowerKw.takeIf { it > 0.0 },
+            tariffEurPerKwh = tariff,
+            costEur = energyKwh?.let {
+                EfficiencyCalc.costEurNetOfSolar(it, solarKwh = open.solarKwh, tariffEurPerKwh = tariff)
+            },
         )
         when (val r = sessions.update(closed)) {
             is Result.Error -> log.error("Failed to close session ${open.id}: ${r.error}")

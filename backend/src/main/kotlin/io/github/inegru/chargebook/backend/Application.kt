@@ -102,4 +102,5 @@ private fun envModule(env: Env) = module {
     single { env }
     single { env.volvo }
     single { env.database }
+    single { env.pricing }
 }

@@ -17,6 +17,7 @@ val pollerModule = module {
             sessions = get(),
             sessionDetector = get(),
             snapshotBus = get(),
+            pricing = get(),
         )
     }
 }

@@ -55,6 +55,8 @@ Endpoints today:
 | `GET /api/snapshot/latest` | Most recent **persisted** snapshot — written by the polling loop |
 | `GET /api/sessions` | List of detected charging sessions. `?vin=`, `?since=<iso>`, `?limit=` |
 | `GET /api/sessions/{id}` | One session plus all its persisted snapshots |
+| `PATCH /api/sessions/{id}` | Override tariff + solar contribution for a single session (see [Pricing](#pricing)) |
+| `GET /api/sessions.csv` | CSV export of all sessions (`?vin=` optional) |
 | `GET /api/analytics/monthly` | Aggregated by calendar month in the system timezone. `?vin=`, `?from=YYYY-MM-DD`, `?to=YYYY-MM-DD`. Returns sessions, energy_kwh, solar_kwh, billable_kwh, cost_eur per month. |
 | `GET /api/live` | SSE stream of every newly persisted snapshot (event name `snapshot`, payload is the JSON `ChargingSnapshot`). The bus replays the latest known snapshot on connect. |
 
@@ -62,7 +64,23 @@ The poller starts on app boot. While unauthenticated it parks for 1 minute at a 
 
 Polling cadence comes from [`PollingScheduler`](backend/src/main/kotlin/io/github/inegru/chargebook/backend/poller/PollingScheduler.kt) — 60s while charging, 5min while plugged-but-idle, 30min while disconnected.
 
-Token storage is still in-memory, so signing in is gone after a server restart. Token persistence is the next milestone.
+Token storage is still in-memory, so signing in is gone after a server restart. Token persistence is the next operational fix.
+
+## Pricing
+
+A session's cost is `(energyKwh − solarKwh) × tariffEurPerKwh`. The flow:
+
+1. **Default tariff at session close.** When the session detector closes a session, the backend applies `DEFAULT_TARIFF_EUR_PER_KWH` from `.env` (typically your home tariff) and computes an initial `cost_eur`. Leave the env var unset to skip auto-pricing entirely (tariff and cost stay null until you set them by hand).
+2. **Per-session override** via `PATCH /api/sessions/{id}` with a JSON body:
+   ```json
+   { "tariffEurPerKwh": 0.45, "solarKwh": 2.5 }
+   ```
+   Use this when the session happened at a public charger with a different price, or to record how much energy came from home solar so it doesn't count toward cost.
+3. **Solar as a percentage.** Instead of `solarKwh`, you can send `solarPct` (0–100) and the backend converts against the session's `energyKwh` before storing — useful when your inverter reports a percentage rather than absolute kWh.
+   ```json
+   { "solarPct": 35 }
+   ```
+4. Every PATCH recomputes `cost_eur`. If `solarKwh > energyKwh` (overshoot from user input), the billable portion is clamped at 0.
 
 ## Local infra
 
