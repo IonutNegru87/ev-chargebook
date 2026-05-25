@@ -9,6 +9,7 @@ import io.github.inegru.chargebook.backend.auth.authModule
 import io.github.inegru.chargebook.backend.auth.authRoutes
 import io.github.inegru.chargebook.backend.config.Env
 import io.github.inegru.chargebook.backend.persistence.Database
+import io.github.inegru.chargebook.backend.persistence.SessionLocalDataSource
 import io.github.inegru.chargebook.backend.persistence.SnapshotLocalDataSource
 import io.github.inegru.chargebook.backend.persistence.persistenceModule
 import io.github.inegru.chargebook.backend.poller.Poller
@@ -79,11 +80,12 @@ fun Application.module() {
     val energy: VolvoEnergyDataSource by inject()
     val vehicles: VolvoVehiclesDataSource by inject()
     val snapshotStore: SnapshotLocalDataSource by inject()
+    val sessionStore: SessionLocalDataSource by inject()
 
     routing {
         authRoutes(oauth, oauthState, tokenStore)
         vehicleRoutes(vehicles, energy, snapshotStore)
-        sessionRoutes()
+        sessionRoutes(sessionStore, snapshotStore)
         liveRoutes()
         analyticsRoutes()
     }
