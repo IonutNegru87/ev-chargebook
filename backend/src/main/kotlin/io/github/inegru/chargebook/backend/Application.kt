@@ -1,6 +1,9 @@
 package io.github.inegru.chargebook.backend
 
 import io.github.inegru.chargebook.backend.analytics.analyticsModule
+import io.github.inegru.chargebook.backend.auth.OAuthStateStore
+import io.github.inegru.chargebook.backend.auth.TokenStore
+import io.github.inegru.chargebook.backend.auth.VolvoOAuthClient
 import io.github.inegru.chargebook.backend.auth.authModule
 import io.github.inegru.chargebook.backend.auth.authRoutes
 import io.github.inegru.chargebook.backend.config.Env
@@ -22,8 +25,12 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.routing
 import io.ktor.server.sse.SSE
 import org.koin.dsl.module
+import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.Koin
 import org.koin.logger.slf4jLogger
+import org.slf4j.LoggerFactory
+
+private val log = LoggerFactory.getLogger("Application")
 
 fun Application.module() {
     val env = Env.fromConfig(environment.config)
@@ -46,6 +53,7 @@ fun Application.module() {
     install(SSE)
     install(StatusPages) {
         exception<Throwable> { call, cause ->
+            log.error("Unhandled exception on ${call.request.local.uri}", cause)
             call.respondText(
                 "Internal error: ${cause.message}",
                 status = HttpStatusCode.InternalServerError,
@@ -53,8 +61,12 @@ fun Application.module() {
         }
     }
 
+    val oauth: VolvoOAuthClient by inject()
+    val oauthState: OAuthStateStore by inject()
+    val tokenStore: TokenStore by inject()
+
     routing {
-        authRoutes(env.volvo)
+        authRoutes(oauth, oauthState, tokenStore)
         sessionRoutes()
         liveRoutes()
         analyticsRoutes()
