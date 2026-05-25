@@ -25,19 +25,13 @@ Patterns are pulled from the team's Android skills (data layer, error handling, 
 - **DTO ↔ domain split.** `RechargeStatusDto` lives in `shared/api/`; `ChargingSnapshot` is the domain type. Mappers are extension functions in `backend/volvo/Mappers.kt`.
 - **Koin per area.** One module per layer/area (`authModule`, `volvoModule`, `persistenceModule`, …) assembled in `Application.module()`. Constructor-reference `singleOf` is the default; lambda form only when a factory is needed.
 
-## Bootstrapping
-
-The Gradle wrapper jar is not committed yet. To generate it:
-
-```sh
-gradle wrapper --gradle-version 8.11
-```
-
-After that:
+## Running
 
 ```sh
 ./gradlew :backend:run
 ```
+
+The Gradle wrapper is committed — no system-wide Gradle install needed. Gradle auto-provisions JDK 21 (the build toolchain) on first run.
 
 ## Local infra
 
