@@ -8,6 +8,7 @@ val pollerModule = module {
     // params (Int debounce, Duration retry intervals) that singleOf would
     // otherwise try to resolve from the container.
     single { SessionDetector() }
+    single { SnapshotBus() }
     single {
         Poller(
             vehicles = get(),
@@ -15,6 +16,7 @@ val pollerModule = module {
             snapshots = get(),
             sessions = get(),
             sessionDetector = get(),
+            snapshotBus = get(),
         )
     }
 }

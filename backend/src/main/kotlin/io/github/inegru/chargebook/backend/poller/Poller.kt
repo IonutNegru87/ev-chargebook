@@ -43,6 +43,7 @@ class Poller(
     private val snapshots: SnapshotLocalDataSource,
     private val sessions: SessionLocalDataSource,
     private val sessionDetector: SessionDetector,
+    private val snapshotBus: SnapshotBus,
     private val authRetryInterval: Duration = 60.seconds,
     private val networkRetryInterval: Duration = 60.seconds,
 ) {
@@ -225,7 +226,7 @@ class Poller(
     private suspend fun persist(snapshot: ChargingSnapshot) {
         when (val r = snapshots.insert(snapshot)) {
             is Result.Error -> log.error("Failed to persist snapshot: ${r.error}")
-            is Result.Success -> Unit
+            is Result.Success -> snapshotBus.publish(snapshot)
         }
     }
 }

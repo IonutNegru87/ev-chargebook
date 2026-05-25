@@ -13,6 +13,7 @@ import io.github.inegru.chargebook.backend.persistence.SessionLocalDataSource
 import io.github.inegru.chargebook.backend.persistence.SnapshotLocalDataSource
 import io.github.inegru.chargebook.backend.persistence.persistenceModule
 import io.github.inegru.chargebook.backend.poller.Poller
+import io.github.inegru.chargebook.backend.poller.SnapshotBus
 import io.github.inegru.chargebook.backend.poller.pollerModule
 import io.github.inegru.chargebook.backend.routes.analyticsRoutes
 import io.github.inegru.chargebook.backend.routes.liveRoutes
@@ -81,12 +82,13 @@ fun Application.module() {
     val vehicles: VolvoVehiclesDataSource by inject()
     val snapshotStore: SnapshotLocalDataSource by inject()
     val sessionStore: SessionLocalDataSource by inject()
+    val snapshotBus: SnapshotBus by inject()
 
     routing {
         authRoutes(oauth, oauthState, tokenStore)
         vehicleRoutes(vehicles, energy, snapshotStore)
         sessionRoutes(sessionStore, snapshotStore)
-        liveRoutes()
+        liveRoutes(snapshotBus)
         analyticsRoutes()
     }
 

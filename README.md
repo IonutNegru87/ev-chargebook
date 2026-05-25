@@ -56,7 +56,7 @@ Endpoints today:
 | `GET /api/sessions` | List of detected charging sessions. `?vin=`, `?since=<iso>`, `?limit=` |
 | `GET /api/sessions/{id}` | One session plus all its persisted snapshots |
 | `GET /api/analytics/monthly` | Stub — 501 |
-| `GET /api/live` | SSE stub |
+| `GET /api/live` | SSE stream of every newly persisted snapshot (event name `snapshot`, payload is the JSON `ChargingSnapshot`). The bus replays the latest known snapshot on connect. |
 
 The poller starts on app boot. While unauthenticated it parks for 1 minute at a time; once you sign in via `/auth/start`, the next tick picks it up. Each polled snapshot is fed through [`SessionDetector`](backend/src/main/kotlin/io/github/inegru/chargebook/backend/poller/SessionDetector.kt) — a tiny state machine that emits `SessionStart` / `SessionEnd` events based on transitions in `chargingStatus` and `chargerConnectionStatus`. On start, a row is inserted into `charging_session`; subsequent snapshots get tagged with the session id; on end, the row is closed out with aggregates from [`SessionAggregates`](shared/src/commonMain/kotlin/io/github/inegru/chargebook/shared/analytics/SessionAggregates.kt) (kWh from trapezoidal integration of power, peak/avg power, end SoC). If the server restarts mid-session, the poller resumes the open `ended_at IS NULL` row instead of opening a duplicate.
 
