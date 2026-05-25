@@ -28,6 +28,7 @@ object ChargingSessionTable : Table("charging_session") {
     val locationLabel = text("location_label").nullable()
     val tariffEurPerKwh = decimal("tariff_eur_kwh", 5, 4).nullable()
     val costEur = decimal("cost_eur", 8, 2).nullable()
+    val solarKwh = decimal("solar_kwh", 6, 3).nullable()
 
     override val primaryKey = PrimaryKey(id)
 }

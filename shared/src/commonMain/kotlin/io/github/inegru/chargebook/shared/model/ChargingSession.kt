@@ -32,4 +32,10 @@ data class ChargingSession(
     val locationLabel: String? = null,
     val tariffEurPerKwh: Double? = null,
     val costEur: Double? = null,
+    /**
+     * Portion of [energyKwh] supplied by a free source (e.g. home solar). Does
+     * not contribute to [costEur]. If the user enters a percentage at the API,
+     * it's converted to kWh against [energyKwh] before being stored.
+     */
+    val solarKwh: Double? = null,
 )

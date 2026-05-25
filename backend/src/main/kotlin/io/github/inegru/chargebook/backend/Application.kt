@@ -1,5 +1,6 @@
 package io.github.inegru.chargebook.backend
 
+import io.github.inegru.chargebook.backend.analytics.AnalyticsService
 import io.github.inegru.chargebook.backend.analytics.analyticsModule
 import io.github.inegru.chargebook.backend.auth.AuthRequiredException
 import io.github.inegru.chargebook.backend.auth.OAuthStateStore
@@ -83,13 +84,14 @@ fun Application.module() {
     val snapshotStore: SnapshotLocalDataSource by inject()
     val sessionStore: SessionLocalDataSource by inject()
     val snapshotBus: SnapshotBus by inject()
+    val analytics: AnalyticsService by inject()
 
     routing {
         authRoutes(oauth, oauthState, tokenStore)
         vehicleRoutes(vehicles, energy, snapshotStore)
         sessionRoutes(sessionStore, snapshotStore)
         liveRoutes(snapshotBus)
-        analyticsRoutes()
+        analyticsRoutes(analytics)
     }
 
     val poller: Poller by inject()

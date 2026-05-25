@@ -58,6 +58,7 @@ class ExposedSessionDataSource : SessionLocalDataSource {
                 it[locationLabel] = session.locationLabel
                 it[tariffEurPerKwh] = session.tariffEurPerKwh?.toBigDecimal()
                 it[costEur] = session.costEur?.toBigDecimal()
+                it[solarKwh] = session.solarKwh?.toBigDecimal()
             }
         }
         if (rows == 0) Result.Error(DataError.Local.NOT_FOUND) else Result.Success(Unit)
@@ -149,6 +150,7 @@ private fun org.jetbrains.exposed.sql.statements.UpdateBuilder<*>.fromSession(
     this[ChargingSessionTable.locationLabel] = session.locationLabel
     this[ChargingSessionTable.tariffEurPerKwh] = session.tariffEurPerKwh?.toBigDecimal()
     this[ChargingSessionTable.costEur] = session.costEur?.toBigDecimal()
+    this[ChargingSessionTable.solarKwh] = session.solarKwh?.toBigDecimal()
 }
 
 private fun ResultRow.toSession(): ChargingSession = ChargingSession(
@@ -170,4 +172,5 @@ private fun ResultRow.toSession(): ChargingSession = ChargingSession(
     locationLabel = this[ChargingSessionTable.locationLabel],
     tariffEurPerKwh = this[ChargingSessionTable.tariffEurPerKwh]?.toDouble(),
     costEur = this[ChargingSessionTable.costEur]?.toDouble(),
+    solarKwh = this[ChargingSessionTable.solarKwh]?.toDouble(),
 )
