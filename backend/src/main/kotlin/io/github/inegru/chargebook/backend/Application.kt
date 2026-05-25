@@ -1,6 +1,7 @@
 package io.github.inegru.chargebook.backend
 
 import io.github.inegru.chargebook.backend.analytics.analyticsModule
+import io.github.inegru.chargebook.backend.auth.AuthRequiredException
 import io.github.inegru.chargebook.backend.auth.OAuthStateStore
 import io.github.inegru.chargebook.backend.auth.TokenStore
 import io.github.inegru.chargebook.backend.auth.VolvoOAuthClient
@@ -13,7 +14,10 @@ import io.github.inegru.chargebook.backend.poller.pollerModule
 import io.github.inegru.chargebook.backend.routes.analyticsRoutes
 import io.github.inegru.chargebook.backend.routes.liveRoutes
 import io.github.inegru.chargebook.backend.routes.sessionRoutes
+import io.github.inegru.chargebook.backend.routes.vehicleRoutes
 import io.github.inegru.chargebook.backend.volvo.volvoModule
+import io.github.inegru.chargebook.shared.data.VolvoEnergyDataSource
+import io.github.inegru.chargebook.shared.data.VolvoVehiclesDataSource
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -52,6 +56,12 @@ fun Application.module() {
     install(CallLogging)
     install(SSE)
     install(StatusPages) {
+        exception<AuthRequiredException> { call, cause ->
+            call.respondText(
+                "Not authenticated. Open /auth/start in a browser to sign in. (${cause.message})",
+                status = HttpStatusCode.Unauthorized,
+            )
+        }
         exception<Throwable> { call, cause ->
             log.error("Unhandled exception on ${call.request.local.uri}", cause)
             call.respondText(
@@ -64,9 +74,12 @@ fun Application.module() {
     val oauth: VolvoOAuthClient by inject()
     val oauthState: OAuthStateStore by inject()
     val tokenStore: TokenStore by inject()
+    val energy: VolvoEnergyDataSource by inject()
+    val vehicles: VolvoVehiclesDataSource by inject()
 
     routing {
         authRoutes(oauth, oauthState, tokenStore)
+        vehicleRoutes(vehicles, energy)
         sessionRoutes()
         liveRoutes()
         analyticsRoutes()

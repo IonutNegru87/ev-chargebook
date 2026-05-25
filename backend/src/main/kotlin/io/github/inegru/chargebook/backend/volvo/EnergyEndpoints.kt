@@ -15,3 +15,9 @@ object EnergyEndpoints {
     fun chargingSystemStatus(vin: String): String = "$BASE/$vin/charging-system-status"
     fun chargingPower(vin: String): String = "$BASE/$vin/charging-power"
 }
+
+object ConnectedVehicleEndpoints {
+    private const val BASE = "/connected-vehicle/v2"
+
+    fun vehicles(): String = "$BASE/vehicles"
+}

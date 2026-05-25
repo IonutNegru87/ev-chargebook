@@ -21,11 +21,12 @@ class AccessTokenProvider(
     private val skew = 60.seconds
 
     suspend operator fun invoke(userId: String): String = mutex.withLock {
-        val current = tokenStore.get(userId) ?: error("Not authenticated for user '$userId'")
+        val current = tokenStore.get(userId) ?: throw AuthRequiredException("No token for '$userId'")
         if (Clock.System.now() < current.expiresAt - skew) {
             return@withLock current.accessToken
         }
-        val refresh = current.refreshToken ?: error("No refresh token stored; user must re-authenticate")
+        val refresh = current.refreshToken
+            ?: throw AuthRequiredException("No refresh token stored; user must re-authenticate")
         val fresh = oauth.refresh(refresh)
         val updated = StoredToken(
             vehicleVin = current.vehicleVin,
@@ -37,3 +38,5 @@ class AccessTokenProvider(
         updated.accessToken
     }
 }
+
+class AuthRequiredException(message: String) : RuntimeException(message)
