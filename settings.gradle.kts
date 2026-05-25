@@ -10,7 +10,9 @@ pluginManagement {
 }
 
 dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    // No `repositoriesMode` set — the Kotlin/Wasm toolchain plugin registers
+    // its own nodejs distribution repository at the project level, and any
+    // mode that warns on project-level repos rejects it.
     repositories {
         mavenCentral()
         google()
@@ -19,3 +21,4 @@ dependencyResolutionManagement {
 
 include(":shared")
 include(":backend")
+include(":web")

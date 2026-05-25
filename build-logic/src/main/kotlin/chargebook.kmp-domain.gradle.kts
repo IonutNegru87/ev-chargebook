@@ -1,12 +1,15 @@
+@file:OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class)
+
 import org.gradle.accessors.dm.LibrariesForLibs
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 
 /**
  * Convention plugin for pure-Kotlin / KMP "core domain" modules.
  *
- * Models the `:core:domain` role from the team's Android architecture: pure Kotlin,
- * no platform or framework deps, depends on nothing else. `:shared` consumes this
- * today; future Android targets can be added by appending to `kotlin { … }` in the
+ * Pure Kotlin, no platform or framework deps, depends on nothing else. Targets
+ * JVM (consumed by `:backend`) and WasmJs (consumed by `:web` via Compose
+ * Multiplatform). Add Android later by appending to `kotlin { … }` in the
  * module's own build script.
  */
 
@@ -22,6 +25,10 @@ kotlin {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
+    }
+
+    wasmJs {
+        browser()
     }
 
     sourceSets {

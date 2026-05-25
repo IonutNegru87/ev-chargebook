@@ -8,9 +8,10 @@ See [EX30-Charging-History-Feasibility.md](EX30-Charging-History-Feasibility.md)
 
 ## Modules
 
-- `shared/` — KMP module. Plays the `core:domain` role: domain models, Volvo API DTOs, `Result`/`Error`/`DataError`, the `VolvoEnergyDataSource` interface, analytics helpers. Pure Kotlin, no platform deps.
+- `shared/` — KMP module (JVM + WasmJs targets). Plays the `core:domain` role: domain models, Volvo API DTOs, `Result`/`Error`/`DataError`, the `VolvoEnergyDataSource` interface, analytics helpers. Pure Kotlin, no platform deps.
 - `backend/` — Ktor (JVM) server: OAuth, polling scheduler, session detector, persistence (Postgres + Timescale), REST + SSE API. Koin wires the layers.
-- `build-logic/` — Gradle convention plugins (`chargebook.kmp-domain`, `chargebook.ktor-server`). Included as a composite build so module build files stay one-liners.
+- `web/` — Compose Multiplatform Web app (WasmJs target). Consumes `:shared` types directly and calls the backend HTTP / SSE API. Run with `./gradlew :web:wasmJsBrowserDevelopmentRun`.
+- `build-logic/` — Gradle convention plugins (`chargebook.kmp-domain`, `chargebook.ktor-server`, `chargebook.cmp-web`). Included as a composite build so module build files stay one-liners.
 - `infra/` — Flyway migrations entry point, optional Grafana dashboards.
 - `docs/` — architecture notes, API quirks, ADRs.
 
