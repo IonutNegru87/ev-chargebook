@@ -51,12 +51,15 @@ Endpoints today:
 | `GET /auth/start` | Redirects to Volvo authorize URL with PKCE |
 | `GET /auth/callback` | Exchanges code for tokens, stores them in memory |
 | `GET /api/vehicles` | Lists VINs the authenticated user has access to |
-| `GET /api/snapshot/me` | Current charging snapshot for the first VIN |
-| `GET /api/sessions` | Stub — returns `[]` (Exposed data source still `TODO()`) |
+| `GET /api/snapshot/me` | Live snapshot for the first VIN (calls Volvo on every request) |
+| `GET /api/snapshot/latest` | Most recent **persisted** snapshot — written by the polling loop |
+| `GET /api/sessions` | Stub — returns `[]` (session detector lands in milestone 3) |
 | `GET /api/analytics/monthly` | Stub — 501 |
 | `GET /api/live` | SSE stub |
 
-Token storage is in-memory, so signing in is gone after a server restart. Persisting tokens (encrypted) and starting the polling loop are the next milestones.
+The poller starts on app boot. While unauthenticated it parks for 1 minute at a time; once you sign in via `/auth/start`, the next tick picks it up and starts persisting snapshots into the `charging_snapshot` Timescale hypertable. Cadence comes from [`PollingScheduler`](backend/src/main/kotlin/io/github/inegru/chargebook/backend/poller/PollingScheduler.kt) — 60s while charging, 5min while plugged-but-idle, 30min while disconnected.
+
+Token storage is still in-memory, so signing in is gone after a server restart. Token persistence + session detection are the next milestones.
 
 ## Local infra
 
