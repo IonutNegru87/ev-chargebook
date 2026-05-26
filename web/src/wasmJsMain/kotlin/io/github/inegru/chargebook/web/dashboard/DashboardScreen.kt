@@ -26,10 +26,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.inegru.chargebook.web.platform.navigateSameWindow
 import io.github.inegru.chargebook.shared.model.ChargingConnectionStatus
 import io.github.inegru.chargebook.shared.model.ChargingSnapshot
 import io.github.inegru.chargebook.shared.model.ChargingSystemStatus
@@ -95,7 +95,6 @@ private fun LoadingCard() {
 
 @Composable
 private fun SignInCard(signInUrl: String) {
-    val uriHandler = LocalUriHandler.current
     Card(elevation = CardDefaults.elevatedCardElevation()) {
         Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Sign in required", style = MaterialTheme.typography.titleMedium)
@@ -103,7 +102,7 @@ private fun SignInCard(signInUrl: String) {
                 "Authorize against your Volvo account so the backend can read your vehicle's charging state.",
                 style = MaterialTheme.typography.bodyMedium,
             )
-            Button(onClick = { uriHandler.openUri(signInUrl) }) {
+            Button(onClick = { navigateSameWindow(signInUrl) }) {
                 Text("Sign in with Volvo")
             }
         }
@@ -132,7 +131,6 @@ private fun ErrorCard(message: String) {
 
 @Composable
 private fun EmptyCard(signInUrl: String) {
-    val uriHandler = LocalUriHandler.current
     Card(elevation = CardDefaults.elevatedCardElevation()) {
         Column(modifier = Modifier.padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("No snapshots yet", style = MaterialTheme.typography.titleMedium)
@@ -140,7 +138,7 @@ private fun EmptyCard(signInUrl: String) {
                 "The polling loop hasn't persisted anything yet. If you haven't signed in since the backend last restarted, do that first.",
                 style = MaterialTheme.typography.bodyMedium,
             )
-            Button(onClick = { uriHandler.openUri(signInUrl) }) {
+            Button(onClick = { navigateSameWindow(signInUrl) }) {
                 Text("Sign in with Volvo")
             }
         }
