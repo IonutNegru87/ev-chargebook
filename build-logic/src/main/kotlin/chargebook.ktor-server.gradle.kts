@@ -32,6 +32,7 @@ dependencies {
     add("implementation", libs.ktor.server.status.pages)
     add("implementation", libs.ktor.server.call.logging)
     add("implementation", libs.ktor.server.sse)
+    add("implementation", libs.ktor.server.cors)
     add("implementation", libs.ktor.server.config.yaml)
     add("implementation", libs.ktor.serialization.kotlinx.json)
 

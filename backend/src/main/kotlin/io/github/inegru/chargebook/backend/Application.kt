@@ -23,12 +23,15 @@ import io.github.inegru.chargebook.backend.routes.vehicleRoutes
 import io.github.inegru.chargebook.backend.volvo.volvoModule
 import io.github.inegru.chargebook.shared.data.VolvoEnergyDataSource
 import io.github.inegru.chargebook.shared.data.VolvoVehiclesDataSource
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.routing
@@ -60,6 +63,17 @@ fun Application.module() {
     install(ContentNegotiation) { json() }
     install(CallLogging)
     install(SSE)
+    install(CORS) {
+        // Compose Multiplatform web dev server runs on :8081 by default
+        // (next free port after the backend's :8080).
+        allowHost("localhost:8081")
+        allowHost("127.0.0.1:8081")
+        allowMethod(HttpMethod.Get)
+        allowMethod(HttpMethod.Post)
+        allowMethod(HttpMethod.Patch)
+        allowHeader(HttpHeaders.ContentType)
+        allowHeader(HttpHeaders.Accept)
+    }
     install(StatusPages) {
         exception<AuthRequiredException> { call, cause ->
             call.respondText(
