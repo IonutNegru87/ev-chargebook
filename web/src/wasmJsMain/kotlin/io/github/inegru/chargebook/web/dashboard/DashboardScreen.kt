@@ -177,7 +177,7 @@ private fun SnapshotCard(snapshot: ChargingSnapshot) {
                 Stat("connection", snapshot.connectionStatus.label())
                 Stat("range", snapshot.rangeKm?.let { "$it km" } ?: "—")
                 Stat("power", snapshot.powerKw?.let { "${kotlin.math.round(it * 10) / 10} kW" } ?: "—")
-                Stat("ETA", snapshot.estimatedMinutes?.let { "$it min" } ?: "—")
+                Stat("time to full", snapshot.estimatedMinutes?.let { formatDuration(it) } ?: "—")
             }
 
             Text(
@@ -198,6 +198,18 @@ private fun Stat(label: String, value: String) {
 }
 
 private fun ChargingSystemStatus.label(): String = name.lowercase().replaceFirstChar { it.uppercase() }
+
+/** Formats a minute count as `Xh Ym`, `Ym`, or `Xh` — whichever applies. */
+private fun formatDuration(minutes: Int): String {
+    if (minutes <= 0) return "0m"
+    val h = minutes / 60
+    val m = minutes % 60
+    return when {
+        h == 0 -> "${m}m"
+        m == 0 -> "${h}h"
+        else -> "${h}h ${m}m"
+    }
+}
 private fun ChargingConnectionStatus.label(): String = when (this) {
     ChargingConnectionStatus.CONNECTED_AC -> "Connected (AC)"
     ChargingConnectionStatus.CONNECTED_DC -> "Connected (DC)"
