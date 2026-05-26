@@ -1,5 +1,6 @@
 package io.github.inegru.chargebook.backend.auth
 
+import io.github.inegru.chargebook.backend.config.WebConfig
 import io.github.inegru.chargebook.backend.volvo.DEFAULT_USER
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -14,6 +15,7 @@ fun Route.authRoutes(
     oauth: VolvoOAuthClient,
     state: OAuthStateStore,
     tokens: TokenStore,
+    web: WebConfig,
 ) {
     route("/auth") {
 
@@ -61,10 +63,10 @@ fun Route.authRoutes(
                     expiresAt = token.expiresAt,
                 ),
             )
-            call.respondText(
-                "Signed in. You can now call /api/snapshot/me.",
-                status = HttpStatusCode.OK,
-            )
+            // Send the browser back to the web app instead of leaving the user
+            // staring at a backend text response.
+            call.response.header(HttpHeaders.Location, web.appBaseUrl)
+            call.respond(HttpStatusCode.Found)
         }
     }
 }

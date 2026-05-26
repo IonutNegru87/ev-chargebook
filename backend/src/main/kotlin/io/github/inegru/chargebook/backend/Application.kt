@@ -9,6 +9,7 @@ import io.github.inegru.chargebook.backend.auth.VolvoOAuthClient
 import io.github.inegru.chargebook.backend.auth.authModule
 import io.github.inegru.chargebook.backend.auth.authRoutes
 import io.github.inegru.chargebook.backend.config.Env
+import io.github.inegru.chargebook.backend.config.WebConfig
 import io.github.inegru.chargebook.backend.persistence.Database
 import io.github.inegru.chargebook.backend.persistence.SessionLocalDataSource
 import io.github.inegru.chargebook.backend.persistence.SnapshotLocalDataSource
@@ -99,9 +100,10 @@ fun Application.module() {
     val sessionStore: SessionLocalDataSource by inject()
     val snapshotBus: SnapshotBus by inject()
     val analytics: AnalyticsService by inject()
+    val webConfig: WebConfig by inject()
 
     routing {
-        authRoutes(oauth, oauthState, tokenStore)
+        authRoutes(oauth, oauthState, tokenStore, webConfig)
         vehicleRoutes(vehicles, energy, snapshotStore)
         sessionRoutes(sessionStore, snapshotStore)
         liveRoutes(snapshotBus)
@@ -117,4 +119,5 @@ private fun envModule(env: Env) = module {
     single { env.volvo }
     single { env.database }
     single { env.pricing }
+    single { env.web }
 }

@@ -12,6 +12,6 @@ fun App() {
     val api = remember { ChargebookApi() }
     val viewModel = remember { DashboardViewModel(api) }
     MaterialTheme {
-        DashboardScreen(viewModel)
+        DashboardScreen(viewModel = viewModel, signInUrl = api.signInUrl)
     }
 }

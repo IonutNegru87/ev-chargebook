@@ -28,6 +28,8 @@ class ChargebookApi(
 ) {
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
+    val signInUrl: String get() = "$baseUrl/auth/start"
+
     val httpClient: HttpClient = HttpClient {
         install(ContentNegotiation) { json(json) }
         install(SSE)

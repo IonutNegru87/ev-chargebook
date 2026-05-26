@@ -23,16 +23,23 @@ data class PricingConfig(
     val defaultTariffEurPerKwh: Double?,
 )
 
+data class WebConfig(
+    /** Where `/auth/callback` redirects after successful sign-in. */
+    val appBaseUrl: String,
+)
+
 data class Env(
     val volvo: VolvoConfig,
     val database: DatabaseConfig,
     val pricing: PricingConfig,
+    val web: WebConfig,
 ) {
     companion object {
         fun fromConfig(config: ApplicationConfig): Env {
             val volvo = config.config("chargebook.volvo")
             val db = config.config("chargebook.database")
             val pricing = config.config("chargebook.pricing")
+            val web = config.config("chargebook.web")
             return Env(
                 volvo = VolvoConfig(
                     clientId = volvo.tryGetString("clientId").orEmpty(),
@@ -50,6 +57,9 @@ data class Env(
                 ),
                 pricing = PricingConfig(
                     defaultTariffEurPerKwh = pricing.tryGetString("defaultTariffEurPerKwh")?.toDoubleOrNull(),
+                ),
+                web = WebConfig(
+                    appBaseUrl = web.property("appBaseUrl").getString(),
                 ),
             )
         }
