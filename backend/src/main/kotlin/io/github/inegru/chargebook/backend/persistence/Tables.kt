@@ -44,4 +44,5 @@ object ChargingSnapshotTable : Table("charging_snapshot") {
     val estimatedMinutes = integer("estimated_minutes").nullable()
     val chargingStatus = text("charging_status").nullable()
     val connectionStatus = text("connection_status").nullable()
+    val ingestedAt = timestamp("ingested_at")
 }

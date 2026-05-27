@@ -7,6 +7,7 @@ import io.github.inegru.chargebook.shared.model.ChargingSystemStatus
 import io.github.inegru.chargebook.shared.result.EmptyResult
 import io.github.inegru.chargebook.shared.result.Result
 import java.util.UUID
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SortOrder
@@ -44,6 +45,7 @@ class ExposedSnapshotDataSource : SnapshotLocalDataSource {
                 it[estimatedMinutes] = snapshot.estimatedMinutes
                 it[chargingStatus] = snapshot.chargingStatus.name
                 it[connectionStatus] = snapshot.connectionStatus.name
+                it[ingestedAt] = Clock.System.now()
             }
         }
         Result.Success(Unit)
@@ -71,7 +73,7 @@ class ExposedSnapshotDataSource : SnapshotLocalDataSource {
             ChargingSnapshotTable
                 .selectAll()
                 .where { ChargingSnapshotTable.vehicleVin eq vehicleVin }
-                .orderBy(ChargingSnapshotTable.recordedAt to SortOrder.DESC)
+                .orderBy(ChargingSnapshotTable.ingestedAt to SortOrder.DESC)
                 .limit(1)
                 .firstOrNull()
                 ?.toSnapshot()
