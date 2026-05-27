@@ -13,6 +13,7 @@ data class ChargingSnapshot(
     val vehicleVin: String,
     val sessionId: String? = null,
     val socPct: Int?,
+    val targetSocPct: Int? = null,
     val powerKw: Double?,
     val rangeKm: Int?,
     val estimatedMinutes: Int?,

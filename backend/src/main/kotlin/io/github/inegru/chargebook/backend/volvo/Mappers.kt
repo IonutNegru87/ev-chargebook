@@ -28,6 +28,7 @@ fun EnergyStateDto.toSnapshot(vin: String): ChargingSnapshot {
         vehicleVin = vin,
         sessionId = null,
         socPct = batteryChargeLevel.okValue()?.toInt(),
+        targetSocPct = targetBatteryChargeLevel.okValue(),
         powerKw = chargingPower.okValue(),
         rangeKm = electricRange.okValue()?.toInt(),
         estimatedMinutes = estimatedChargingTimeToTargetBatteryChargeLevel.okValue(),

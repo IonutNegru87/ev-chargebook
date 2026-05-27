@@ -38,6 +38,7 @@ object ChargingSnapshotTable : Table("charging_snapshot") {
     val sessionId = uuid("session_id").references(ChargingSessionTable.id).nullable()
     val vehicleVin = text("vehicle_vin")
     val socPct = integer("soc_pct").nullable()
+    val targetSocPct = integer("target_soc_pct").nullable()
     val powerKw = decimal("power_kw", 6, 3).nullable()
     val rangeKm = integer("range_km").nullable()
     val estimatedMinutes = integer("estimated_minutes").nullable()

@@ -38,6 +38,7 @@ class ExposedSnapshotDataSource : SnapshotLocalDataSource {
                 it[sessionId] = snapshot.sessionId?.let(UUID::fromString)
                 it[vehicleVin] = snapshot.vehicleVin
                 it[socPct] = snapshot.socPct
+                it[targetSocPct] = snapshot.targetSocPct
                 it[powerKw] = snapshot.powerKw?.toBigDecimal()
                 it[rangeKm] = snapshot.rangeKm
                 it[estimatedMinutes] = snapshot.estimatedMinutes
@@ -109,6 +110,7 @@ private fun ResultRow.toSnapshot(): ChargingSnapshot = ChargingSnapshot(
     vehicleVin = this[ChargingSnapshotTable.vehicleVin],
     sessionId = this[ChargingSnapshotTable.sessionId]?.toString(),
     socPct = this[ChargingSnapshotTable.socPct],
+    targetSocPct = this[ChargingSnapshotTable.targetSocPct],
     powerKw = this[ChargingSnapshotTable.powerKw]?.toDouble(),
     rangeKm = this[ChargingSnapshotTable.rangeKm],
     estimatedMinutes = this[ChargingSnapshotTable.estimatedMinutes],

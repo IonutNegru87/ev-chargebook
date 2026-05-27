@@ -177,7 +177,10 @@ private fun SnapshotCard(snapshot: ChargingSnapshot) {
                 Stat("connection", snapshot.connectionStatus.label())
                 Stat("range", snapshot.rangeKm?.let { "$it km" } ?: "—")
                 Stat("power", snapshot.powerKw?.let { "${kotlin.math.round(it * 10) / 10} kW" } ?: "—")
-                Stat("time to full", snapshot.estimatedMinutes?.let { formatDuration(it) } ?: "—")
+                Stat(
+                    label = snapshot.targetSocPct?.let { "time to $it%" } ?: "time to full",
+                    value = snapshot.estimatedMinutes?.let { formatDuration(it) } ?: "—",
+                )
             }
 
             Text(
