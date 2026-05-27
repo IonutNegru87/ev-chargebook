@@ -3,6 +3,7 @@ package io.github.inegru.chargebook.web.api
 import io.github.inegru.chargebook.shared.analytics.MonthlyTotals
 import io.github.inegru.chargebook.shared.model.ChargingSession
 import io.github.inegru.chargebook.shared.model.ChargingSnapshot
+import io.github.inegru.chargebook.shared.model.SessionWithSnapshots
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -67,6 +68,9 @@ class ChargebookApi(
 
     suspend fun monthlyTotals(): ListResult<List<MonthlyTotals>> =
         getList("$baseUrl/api/analytics/monthly")
+
+    suspend fun session(id: String): ListResult<SessionWithSnapshots> =
+        getList("$baseUrl/api/sessions/$id")
 
     private suspend inline fun <reified T> getList(url: String): ListResult<T> = try {
         val response: HttpResponse = httpClient.get(url)

@@ -4,7 +4,7 @@ import io.github.inegru.chargebook.backend.persistence.SessionLocalDataSource
 import io.github.inegru.chargebook.backend.persistence.SnapshotLocalDataSource
 import io.github.inegru.chargebook.shared.analytics.EfficiencyCalc
 import io.github.inegru.chargebook.shared.model.ChargingSession
-import io.github.inegru.chargebook.shared.model.ChargingSnapshot
+import io.github.inegru.chargebook.shared.model.SessionWithSnapshots
 import io.github.inegru.chargebook.shared.result.Result
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -17,12 +17,6 @@ import io.ktor.server.routing.patch
 import io.ktor.server.routing.route
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
-
-@Serializable
-data class SessionWithSnapshots(
-    val session: ChargingSession,
-    val snapshots: List<ChargingSnapshot>,
-)
 
 /**
  * Pricing override for a single session. `solarKwh` wins if both are present;
