@@ -1,5 +1,7 @@
 package io.github.inegru.chargebook.web.api
 
+import io.github.inegru.chargebook.shared.analytics.MonthlyTotals
+import io.github.inegru.chargebook.shared.model.ChargingSession
 import io.github.inegru.chargebook.shared.model.ChargingSnapshot
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -52,6 +54,29 @@ class ChargebookApi(
         }
     } catch (e: Throwable) {
         SnapshotResult.Error(e.message ?: e::class.simpleName.orEmpty())
+    }
+
+    sealed interface ListResult<out T> {
+        data class Success<T>(val data: T) : ListResult<T>
+        data object Unauthorized : ListResult<Nothing>
+        data class Error(val message: String) : ListResult<Nothing>
+    }
+
+    suspend fun sessions(): ListResult<List<ChargingSession>> =
+        getList("$baseUrl/api/sessions")
+
+    suspend fun monthlyTotals(): ListResult<List<MonthlyTotals>> =
+        getList("$baseUrl/api/analytics/monthly")
+
+    private suspend inline fun <reified T> getList(url: String): ListResult<T> = try {
+        val response: HttpResponse = httpClient.get(url)
+        when (response.status) {
+            HttpStatusCode.OK -> ListResult.Success(response.body<T>())
+            HttpStatusCode.Unauthorized -> ListResult.Unauthorized
+            else -> ListResult.Error("HTTP ${response.status.value}")
+        }
+    } catch (e: Throwable) {
+        ListResult.Error(e.message ?: e::class.simpleName.orEmpty())
     }
 
     /**

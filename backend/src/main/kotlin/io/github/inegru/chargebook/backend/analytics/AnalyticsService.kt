@@ -1,6 +1,7 @@
 package io.github.inegru.chargebook.backend.analytics
 
 import io.github.inegru.chargebook.backend.persistence.SessionLocalDataSource
+import io.github.inegru.chargebook.shared.analytics.MonthlyTotals
 import io.github.inegru.chargebook.shared.error.DataError
 import io.github.inegru.chargebook.shared.model.ChargingSession
 import io.github.inegru.chargebook.shared.result.Result
@@ -11,18 +12,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class MonthlyTotals(
-    val year: Int,
-    val month: Int,
-    val sessions: Int,
-    val energyKwh: Double,
-    val solarKwh: Double,
-    val billableKwh: Double,
-    val costEur: Double,
-)
 
 /**
  * Monthly aggregation over [ChargingSession] rows. Bucketed in the system
