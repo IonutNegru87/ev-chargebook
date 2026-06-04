@@ -3,6 +3,7 @@ package io.github.inegru.chargebook.web.api
 import io.github.inegru.chargebook.shared.analytics.MonthlyTotals
 import io.github.inegru.chargebook.shared.model.ChargingSession
 import io.github.inegru.chargebook.shared.model.ChargingSnapshot
+import io.github.inegru.chargebook.shared.model.SessionPricingPatch
 import io.github.inegru.chargebook.shared.model.SessionWithSnapshots
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -10,8 +11,12 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.sse.SSE
 import io.ktor.client.plugins.sse.sse
 import io.ktor.client.request.get
+import io.ktor.client.request.patch
+import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -71,6 +76,24 @@ class ChargebookApi(
 
     suspend fun session(id: String): ListResult<SessionWithSnapshots> =
         getList("$baseUrl/api/sessions/$id")
+
+    suspend fun patchSessionPricing(
+        id: String,
+        body: SessionPricingPatch,
+    ): ListResult<ChargingSession> = try {
+        val response: HttpResponse = httpClient.patch("$baseUrl/api/sessions/$id") {
+            contentType(ContentType.Application.Json)
+            setBody(body)
+        }
+        when (response.status) {
+            HttpStatusCode.OK -> ListResult.Success(response.body())
+            HttpStatusCode.Unauthorized -> ListResult.Unauthorized
+            HttpStatusCode.NotFound -> ListResult.Error("Session not found")
+            else -> ListResult.Error("HTTP ${response.status.value}")
+        }
+    } catch (e: Throwable) {
+        ListResult.Error(e.message ?: e::class.simpleName.orEmpty())
+    }
 
     private suspend inline fun <reified T> getList(url: String): ListResult<T> = try {
         val response: HttpResponse = httpClient.get(url)

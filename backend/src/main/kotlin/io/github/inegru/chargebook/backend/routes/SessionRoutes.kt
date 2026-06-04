@@ -4,6 +4,7 @@ import io.github.inegru.chargebook.backend.persistence.SessionLocalDataSource
 import io.github.inegru.chargebook.backend.persistence.SnapshotLocalDataSource
 import io.github.inegru.chargebook.shared.analytics.EfficiencyCalc
 import io.github.inegru.chargebook.shared.model.ChargingSession
+import io.github.inegru.chargebook.shared.model.SessionPricingPatch
 import io.github.inegru.chargebook.shared.model.SessionWithSnapshots
 import io.github.inegru.chargebook.shared.result.Result
 import io.ktor.http.ContentType
@@ -16,19 +17,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.route
 import kotlinx.datetime.Instant
-import kotlinx.serialization.Serializable
-
-/**
- * Pricing override for a single session. `solarKwh` wins if both are present;
- * `solarPct` is converted against the session's `energyKwh` and stored as kWh.
- * Send `null` to clear a previously stored field.
- */
-@Serializable
-data class SessionPricingPatch(
-    val tariffEurPerKwh: Double? = null,
-    val solarKwh: Double? = null,
-    val solarPct: Double? = null,
-)
 
 fun Route.sessionRoutes(
     sessions: SessionLocalDataSource,
@@ -122,9 +110,11 @@ fun Route.sessionRoutes(
 }
 
 private fun ChargingSession.applyPricing(patch: SessionPricingPatch): ChargingSession {
+    val patchKwh = patch.solarKwh
+    val patchPct = patch.solarPct
     val resolvedSolarKwh: Double? = when {
-        patch.solarKwh != null -> patch.solarKwh
-        patch.solarPct != null -> energyKwh?.let { EfficiencyCalc.solarKwhFromPct(it, patch.solarPct) }
+        patchKwh != null -> patchKwh
+        patchPct != null -> energyKwh?.let { EfficiencyCalc.solarKwhFromPct(it, patchPct) }
         else -> solarKwh
     }
     val resolvedTariff: Double? = patch.tariffEurPerKwh ?: tariffEurPerKwh

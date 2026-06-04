@@ -9,14 +9,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -24,6 +30,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.inegru.chargebook.shared.model.ChargingSession
 import io.github.inegru.chargebook.shared.model.ChargingSnapshot
 import io.github.inegru.chargebook.shared.model.ConnectionType
+import io.github.inegru.chargebook.shared.model.SessionPricingPatch
 import io.github.inegru.chargebook.shared.model.SessionWithSnapshots
 import io.github.inegru.chargebook.web.platform.formatDateTime
 import io.github.inegru.chargebook.web.platform.formatDuration
@@ -42,6 +49,7 @@ fun SessionsScreen(viewModel: SessionsViewModel) {
             isLoading = state.detailLoading,
             error = state.detailError,
             onBack = viewModel::closeDetail,
+            onUpdatePricing = viewModel::updatePricing,
         )
         return
     }
@@ -103,6 +111,7 @@ private fun SessionDetailView(
     isLoading: Boolean,
     error: String?,
     onBack: () -> Unit,
+    onUpdatePricing: (String, SessionPricingPatch) -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),
@@ -129,6 +138,8 @@ private fun SessionDetailView(
                         Stat("cost", s.costEur?.let { "€${it.round2()}" } ?: "—")
                     }
                 }
+
+                PricingEditor(session = s, onSubmit = { patch -> onUpdatePricing(s.id, patch) })
 
                 Text(
                     "Snapshots (${detail.snapshots.size})",
@@ -167,6 +178,65 @@ private fun SnapshotRow(snap: ChargingSnapshot) {
         HorizontalDivider()
     }
 }
+
+@Composable
+private fun PricingEditor(
+    session: ChargingSession,
+    onSubmit: (SessionPricingPatch) -> Unit,
+) {
+    var tariff by remember(session.id) {
+        mutableStateOf(session.tariffEurPerKwh?.toString() ?: "")
+    }
+    var solarMode by remember(session.id) { mutableStateOf(SolarMode.Kwh) }
+    var solar by remember(session.id) {
+        mutableStateOf(session.solarKwh?.toString() ?: "")
+    }
+
+    Card(elevation = CardDefaults.elevatedCardElevation(), modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("Pricing override", style = MaterialTheme.typography.titleSmall)
+            OutlinedTextField(
+                value = tariff,
+                onValueChange = { tariff = it },
+                label = { Text("Tariff (€/kWh)") },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                FilterChip(
+                    selected = solarMode == SolarMode.Kwh,
+                    onClick = { solarMode = SolarMode.Kwh },
+                    label = { Text("Solar (kWh)") },
+                )
+                FilterChip(
+                    selected = solarMode == SolarMode.Pct,
+                    onClick = { solarMode = SolarMode.Pct },
+                    label = { Text("Solar (%)") },
+                )
+            }
+            OutlinedTextField(
+                value = solar,
+                onValueChange = { solar = it },
+                label = { Text(if (solarMode == SolarMode.Kwh) "kWh from solar" else "% from solar") },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Button(
+                onClick = {
+                    val patch = SessionPricingPatch(
+                        tariffEurPerKwh = tariff.toDoubleOrNullOrBlank(),
+                        solarKwh = if (solarMode == SolarMode.Kwh) solar.toDoubleOrNullOrBlank() else null,
+                        solarPct = if (solarMode == SolarMode.Pct) solar.toDoubleOrNullOrBlank() else null,
+                    )
+                    onSubmit(patch)
+                },
+            ) { Text("Save pricing") }
+        }
+    }
+}
+
+private enum class SolarMode { Kwh, Pct }
+
+private fun String.toDoubleOrNullOrBlank(): Double? =
+    if (isBlank()) null else replace(',', '.').toDoubleOrNull()
 
 @Composable
 private fun Stat(label: String, value: String) {

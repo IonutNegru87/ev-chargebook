@@ -3,6 +3,7 @@ package io.github.inegru.chargebook.web.sessions
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.inegru.chargebook.shared.model.ChargingSession
+import io.github.inegru.chargebook.shared.model.SessionPricingPatch
 import io.github.inegru.chargebook.shared.model.SessionWithSnapshots
 import io.github.inegru.chargebook.web.api.ChargebookApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -67,5 +68,30 @@ class SessionsViewModel(private val api: ChargebookApi) : ViewModel() {
 
     fun closeDetail() {
         _uiState.update { it.copy(detail = null, detailLoading = false, detailError = null) }
+    }
+
+    /**
+     * Submits a pricing patch for the currently-loaded detail. On success, the
+     * backend returns the updated session — we splice it into the cached list
+     * and into the open detail view so the UI updates without a full reload.
+     */
+    fun updatePricing(id: String, patch: SessionPricingPatch) {
+        viewModelScope.launch {
+            when (val r = api.patchSessionPricing(id, patch)) {
+                is ChargebookApi.ListResult.Success -> _uiState.update { s ->
+                    val updated = r.data
+                    s.copy(
+                        sessions = s.sessions.map { if (it.id == id) updated else it },
+                        detail = s.detail?.takeIf { it.session.id == id }
+                            ?.copy(session = updated)
+                            ?: s.detail,
+                    )
+                }
+                ChargebookApi.ListResult.Unauthorized ->
+                    _uiState.update { it.copy(detailError = "Unauthorized") }
+                is ChargebookApi.ListResult.Error ->
+                    _uiState.update { it.copy(detailError = r.message) }
+            }
+        }
     }
 }

@@ -18,6 +18,7 @@ import io.github.inegru.chargebook.backend.poller.Poller
 import io.github.inegru.chargebook.backend.poller.SnapshotBus
 import io.github.inegru.chargebook.backend.poller.pollerModule
 import io.github.inegru.chargebook.backend.routes.analyticsRoutes
+import io.github.inegru.chargebook.backend.routes.healthRoutes
 import io.github.inegru.chargebook.backend.routes.liveRoutes
 import io.github.inegru.chargebook.backend.routes.sessionRoutes
 import io.github.inegru.chargebook.backend.routes.vehicleRoutes
@@ -103,6 +104,7 @@ fun Application.module() {
     val webConfig: WebConfig by inject()
 
     routing {
+        healthRoutes(tokenStore)
         authRoutes(oauth, oauthState, tokenStore, webConfig)
         vehicleRoutes(vehicles, energy, snapshotStore)
         sessionRoutes(sessionStore, snapshotStore)
