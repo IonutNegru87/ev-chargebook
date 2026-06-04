@@ -46,3 +46,14 @@ object ChargingSnapshotTable : Table("charging_snapshot") {
     val connectionStatus = text("connection_status").nullable()
     val ingestedAt = timestamp("ingested_at")
 }
+
+object OAuthTokenTable : Table("oauth_token") {
+    val userId = text("user_id")
+    val vehicleVin = text("vehicle_vin").nullable()
+    val accessToken = text("access_token")
+    val refreshToken = text("refresh_token").nullable()
+    val expiresAt = timestamp("expires_at")
+    val updatedAt = timestamp("updated_at")
+
+    override val primaryKey = PrimaryKey(userId)
+}

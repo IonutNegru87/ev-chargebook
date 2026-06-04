@@ -10,5 +10,5 @@ val authModule = module {
     single { VolvoOAuthClient(config = get()) }
     single { OAuthStateStore() }
     singleOf(::AccessTokenProvider)
-    singleOf(::InMemoryTokenStore) { bind<TokenStore>() }
+    singleOf(::PostgresTokenStore) { bind<TokenStore>() }
 }
