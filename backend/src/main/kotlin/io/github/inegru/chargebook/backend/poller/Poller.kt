@@ -2,6 +2,7 @@ package io.github.inegru.chargebook.backend.poller
 
 import io.github.inegru.chargebook.backend.auth.AuthRequiredException
 import io.github.inegru.chargebook.backend.config.PricingConfig
+import io.github.inegru.chargebook.backend.location.LocationLabeler
 import io.github.inegru.chargebook.backend.persistence.SessionLocalDataSource
 import io.github.inegru.chargebook.backend.persistence.SnapshotLocalDataSource
 import io.github.inegru.chargebook.shared.analytics.EfficiencyCalc
@@ -44,6 +45,7 @@ class Poller(
     private val vehicles: VolvoVehiclesDataSource,
     private val energy: VolvoEnergyDataSource,
     private val location: VolvoLocationDataSource,
+    private val labeler: LocationLabeler,
     private val snapshots: SnapshotLocalDataSource,
     private val sessions: SessionLocalDataSource,
     private val sessionDetector: SessionDetector,
@@ -120,13 +122,16 @@ class Poller(
     /** Polls one snapshot, drives session detection, persists, returns wait until next poll. */
     private suspend fun pollOnce(vin: String): Duration = when (val r = energy.rechargeStatus(vin)) {
         is Result.Success -> {
-            val tagged = handleSessionLifecycle(vin, r.data)
+            val withLocation = enrichWithLocation(vin, r.data)
+            val tagged = handleSessionLifecycle(vin, withLocation)
             persist(tagged)
             PollingScheduler.intervalFor(tagged.connectionStatus, tagged.chargingStatus).also {
                 log.info(
                     "Polled $vin — SoC=${tagged.socPct}%, status=${tagged.chargingStatus}, " +
                         "connection=${tagged.connectionStatus}, power=${tagged.powerKw}kW, " +
-                        "session=${tagged.sessionId ?: "none"}; next in $it",
+                        "session=${tagged.sessionId ?: "none"}, " +
+                        "location=${tagged.locationLabel ?: tagged.location?.let { "%.5f,%.5f".format(it.lat, it.lon) } ?: "unknown"}; " +
+                        "next in $it",
                 )
             }
         }
@@ -137,6 +142,19 @@ class Poller(
             }
             networkRetryInterval
         }
+    }
+
+    /** Fetches current location and a reverse-geocoded label, attaches to the snapshot. */
+    private suspend fun enrichWithLocation(vin: String, snapshot: ChargingSnapshot): ChargingSnapshot {
+        val point = when (val r = location.currentLocation(vin)) {
+            is Result.Success -> r.data
+            is Result.Error -> {
+                log.warn("Location fetch failed for $vin: ${r.error}")
+                null
+            }
+        } ?: return snapshot
+        val label = labeler.label(point)
+        return snapshot.copy(location = point, locationLabel = label)
     }
 
     /**
@@ -182,26 +200,22 @@ class Poller(
         }
 
     private suspend fun openNewSession(vin: String, snapshot: ChargingSnapshot): ChargingSession {
-        val locationAtStart = when (val r = location.currentLocation(vin)) {
-            is Result.Success -> r.data
-            is Result.Error -> {
-                log.warn("Could not capture location for new session: ${r.error}")
-                null
-            }
-        }
+        // The snapshot was already enriched with location + label in pollOnce —
+        // reuse those values instead of a second round-trip to Volvo + Nominatim.
         val session = ChargingSession(
             id = UUID.randomUUID().toString(),
             vehicleVin = vin,
             startedAt = snapshot.recordedAt,
             startSocPct = snapshot.socPct,
             connectionType = snapshot.connectionStatus.toConnectionType(),
-            location = locationAtStart,
+            location = snapshot.location,
+            locationLabel = snapshot.locationLabel,
         )
         when (val r = sessions.insert(session)) {
             is Result.Error -> log.error("Failed to open new session: ${r.error}")
             is Result.Success -> log.info(
                 "Opened session ${session.id} for $vin at ${session.startedAt} " +
-                    "(location=${locationAtStart?.let { "%.5f,%.5f".format(it.lat, it.lon) } ?: "unknown"})",
+                    "(location=${session.locationLabel ?: session.location?.let { "%.5f,%.5f".format(it.lat, it.lon) } ?: "unknown"})",
             )
         }
         return session

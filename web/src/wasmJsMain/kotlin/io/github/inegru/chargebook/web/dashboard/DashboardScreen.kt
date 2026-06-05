@@ -184,8 +184,32 @@ private fun SnapshotCard(snapshot: ChargingSnapshot) {
                 )
             }
 
+            snapshot.location?.let { point ->
+                LocationLine(label = snapshot.locationLabel, lat = point.lat, lon = point.lon)
+            }
+
             Text(
                 "recorded at ${snapshot.recordedAt}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun LocationLine(label: String?, lat: Double, lon: Double) {
+    val rounded = "${(lat * 100000).toLong() / 100000.0}, ${(lon * 100000).toLong() / 100000.0}"
+    Column {
+        Text(
+            "Currently at",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(label ?: rounded, style = MaterialTheme.typography.bodyLarge)
+        if (label != null) {
+            Text(
+                rounded,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

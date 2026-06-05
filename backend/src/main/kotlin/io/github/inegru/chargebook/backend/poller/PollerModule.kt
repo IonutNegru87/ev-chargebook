@@ -14,6 +14,7 @@ val pollerModule = module {
             vehicles = get(),
             energy = get(),
             location = get(),
+            labeler = get(),
             snapshots = get(),
             sessions = get(),
             sessionDetector = get(),

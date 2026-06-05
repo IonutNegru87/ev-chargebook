@@ -45,6 +45,9 @@ object ChargingSnapshotTable : Table("charging_snapshot") {
     val chargingStatus = text("charging_status").nullable()
     val connectionStatus = text("connection_status").nullable()
     val ingestedAt = timestamp("ingested_at")
+    val locationLat = double("location_lat").nullable()
+    val locationLon = double("location_lon").nullable()
+    val locationLabel = text("location_label").nullable()
 }
 
 object OAuthTokenTable : Table("oauth_token") {

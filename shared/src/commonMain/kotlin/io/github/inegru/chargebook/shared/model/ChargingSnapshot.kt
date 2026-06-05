@@ -19,4 +19,6 @@ data class ChargingSnapshot(
     val estimatedMinutes: Int?,
     val chargingStatus: ChargingSystemStatus,
     val connectionStatus: ChargingConnectionStatus,
+    val location: GeoPoint? = null,
+    val locationLabel: String? = null,
 )

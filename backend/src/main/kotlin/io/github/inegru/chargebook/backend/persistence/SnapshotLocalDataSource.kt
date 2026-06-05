@@ -4,6 +4,7 @@ import io.github.inegru.chargebook.shared.error.DataError
 import io.github.inegru.chargebook.shared.model.ChargingConnectionStatus
 import io.github.inegru.chargebook.shared.model.ChargingSnapshot
 import io.github.inegru.chargebook.shared.model.ChargingSystemStatus
+import io.github.inegru.chargebook.shared.model.GeoPoint
 import io.github.inegru.chargebook.shared.result.EmptyResult
 import io.github.inegru.chargebook.shared.result.Result
 import java.util.UUID
@@ -46,6 +47,9 @@ class ExposedSnapshotDataSource : SnapshotLocalDataSource {
                 it[chargingStatus] = snapshot.chargingStatus.name
                 it[connectionStatus] = snapshot.connectionStatus.name
                 it[ingestedAt] = Clock.System.now()
+                it[locationLat] = snapshot.location?.lat
+                it[locationLon] = snapshot.location?.lon
+                it[locationLabel] = snapshot.locationLabel
             }
         }
         Result.Success(Unit)
@@ -122,4 +126,8 @@ private fun ResultRow.toSnapshot(): ChargingSnapshot = ChargingSnapshot(
     connectionStatus = this[ChargingSnapshotTable.connectionStatus]
         ?.let { runCatching { ChargingConnectionStatus.valueOf(it) }.getOrDefault(ChargingConnectionStatus.UNKNOWN) }
         ?: ChargingConnectionStatus.UNKNOWN,
+    location = this[ChargingSnapshotTable.locationLat]?.let { lat ->
+        this[ChargingSnapshotTable.locationLon]?.let { lon -> GeoPoint(lat = lat, lon = lon) }
+    },
+    locationLabel = this[ChargingSnapshotTable.locationLabel],
 )

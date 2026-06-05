@@ -10,6 +10,7 @@ import io.github.inegru.chargebook.backend.auth.authModule
 import io.github.inegru.chargebook.backend.auth.authRoutes
 import io.github.inegru.chargebook.backend.config.Env
 import io.github.inegru.chargebook.backend.config.WebConfig
+import io.github.inegru.chargebook.backend.location.locationModule
 import io.github.inegru.chargebook.backend.persistence.Database
 import io.github.inegru.chargebook.backend.persistence.SessionLocalDataSource
 import io.github.inegru.chargebook.backend.persistence.SnapshotLocalDataSource
@@ -59,6 +60,7 @@ fun Application.module() {
             volvoModule,
             persistenceModule,
             analyticsModule,
+            locationModule,
             pollerModule,
         )
     }
