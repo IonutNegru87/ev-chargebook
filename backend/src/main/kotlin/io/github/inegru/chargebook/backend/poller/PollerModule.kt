@@ -13,6 +13,7 @@ val pollerModule = module {
         Poller(
             vehicles = get(),
             energy = get(),
+            location = get(),
             snapshots = get(),
             sessions = get(),
             sessionDetector = get(),

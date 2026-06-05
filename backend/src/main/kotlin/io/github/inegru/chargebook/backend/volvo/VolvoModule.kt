@@ -4,6 +4,7 @@ import io.github.inegru.chargebook.backend.auth.AccessTokenProvider
 import io.github.inegru.chargebook.backend.config.VolvoConfig
 import io.github.inegru.chargebook.backend.http.HttpClientFactory
 import io.github.inegru.chargebook.shared.data.VolvoEnergyDataSource
+import io.github.inegru.chargebook.shared.data.VolvoLocationDataSource
 import io.github.inegru.chargebook.shared.data.VolvoVehiclesDataSource
 import org.koin.dsl.bind
 import org.koin.dsl.module
@@ -33,6 +34,14 @@ val volvoModule = module {
             tokenProvider = { tokens(DEFAULT_USER) },
         )
     } bind VolvoVehiclesDataSource::class
+
+    single {
+        val tokens: AccessTokenProvider = get()
+        KtorVolvoLocationDataSource(
+            httpClient = get(),
+            tokenProvider = { tokens(DEFAULT_USER) },
+        )
+    } bind VolvoLocationDataSource::class
 }
 
 /** Single-tenant default until per-user auth lands. */

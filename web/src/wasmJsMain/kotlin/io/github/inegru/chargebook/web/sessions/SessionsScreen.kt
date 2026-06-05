@@ -30,8 +30,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.inegru.chargebook.shared.model.ChargingSession
 import io.github.inegru.chargebook.shared.model.ChargingSnapshot
 import io.github.inegru.chargebook.shared.model.ConnectionType
+import io.github.inegru.chargebook.shared.model.GeoPoint
 import io.github.inegru.chargebook.shared.model.SessionPricingPatch
 import io.github.inegru.chargebook.shared.model.SessionWithSnapshots
+import androidx.compose.ui.platform.LocalUriHandler
 import io.github.inegru.chargebook.web.platform.formatDateTime
 import io.github.inegru.chargebook.web.platform.formatDuration
 import io.github.inegru.chargebook.web.platform.minutesBetween
@@ -139,6 +141,8 @@ private fun SessionDetailView(
                     }
                 }
 
+                s.location?.let { LocationCard(point = it, label = s.locationLabel) }
+
                 PricingEditor(session = s, onSubmit = { patch -> onUpdatePricing(s.id, patch) })
 
                 Text(
@@ -176,6 +180,21 @@ private fun SnapshotRow(snap: ChargingSnapshot) {
             )
         }
         HorizontalDivider()
+    }
+}
+
+@Composable
+private fun LocationCard(point: GeoPoint, label: String?) {
+    val lat = ((point.lat * 100000).toLong()) / 100000.0
+    val lon = ((point.lon * 100000).toLong()) / 100000.0
+    val mapUrl = "https://www.openstreetmap.org/?mlat=${point.lat}&mlon=${point.lon}#map=17/${point.lat}/${point.lon}"
+    val uriHandler = LocalUriHandler.current
+    Card(elevation = CardDefaults.elevatedCardElevation(), modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Location", style = MaterialTheme.typography.titleSmall)
+            Text(label ?: "$lat, $lon", style = MaterialTheme.typography.bodyLarge)
+            TextButton(onClick = { uriHandler.openUri(mapUrl) }) { Text("Open in OpenStreetMap") }
+        }
     }
 }
 

@@ -7,6 +7,7 @@ import io.github.inegru.chargebook.backend.persistence.SnapshotLocalDataSource
 import io.github.inegru.chargebook.shared.analytics.EfficiencyCalc
 import io.github.inegru.chargebook.shared.analytics.SessionAggregates
 import io.github.inegru.chargebook.shared.data.VolvoEnergyDataSource
+import io.github.inegru.chargebook.shared.data.VolvoLocationDataSource
 import io.github.inegru.chargebook.shared.data.VolvoVehiclesDataSource
 import io.github.inegru.chargebook.shared.error.DataError
 import io.github.inegru.chargebook.shared.model.ChargingConnectionStatus
@@ -42,6 +43,7 @@ import org.slf4j.LoggerFactory
 class Poller(
     private val vehicles: VolvoVehiclesDataSource,
     private val energy: VolvoEnergyDataSource,
+    private val location: VolvoLocationDataSource,
     private val snapshots: SnapshotLocalDataSource,
     private val sessions: SessionLocalDataSource,
     private val sessionDetector: SessionDetector,
@@ -180,16 +182,27 @@ class Poller(
         }
 
     private suspend fun openNewSession(vin: String, snapshot: ChargingSnapshot): ChargingSession {
+        val locationAtStart = when (val r = location.currentLocation(vin)) {
+            is Result.Success -> r.data
+            is Result.Error -> {
+                log.warn("Could not capture location for new session: ${r.error}")
+                null
+            }
+        }
         val session = ChargingSession(
             id = UUID.randomUUID().toString(),
             vehicleVin = vin,
             startedAt = snapshot.recordedAt,
             startSocPct = snapshot.socPct,
             connectionType = snapshot.connectionStatus.toConnectionType(),
+            location = locationAtStart,
         )
         when (val r = sessions.insert(session)) {
             is Result.Error -> log.error("Failed to open new session: ${r.error}")
-            is Result.Success -> log.info("Opened session ${session.id} for $vin at ${session.startedAt}")
+            is Result.Success -> log.info(
+                "Opened session ${session.id} for $vin at ${session.startedAt} " +
+                    "(location=${locationAtStart?.let { "%.5f,%.5f".format(it.lat, it.lon) } ?: "unknown"})",
+            )
         }
         return session
     }

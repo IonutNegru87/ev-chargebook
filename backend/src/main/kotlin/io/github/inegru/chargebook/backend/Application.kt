@@ -24,6 +24,7 @@ import io.github.inegru.chargebook.backend.routes.sessionRoutes
 import io.github.inegru.chargebook.backend.routes.vehicleRoutes
 import io.github.inegru.chargebook.backend.volvo.volvoModule
 import io.github.inegru.chargebook.shared.data.VolvoEnergyDataSource
+import io.github.inegru.chargebook.shared.data.VolvoLocationDataSource
 import io.github.inegru.chargebook.shared.data.VolvoVehiclesDataSource
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -97,6 +98,7 @@ fun Application.module() {
     val tokenStore: TokenStore by inject()
     val energy: VolvoEnergyDataSource by inject()
     val vehicles: VolvoVehiclesDataSource by inject()
+    val locationDs: VolvoLocationDataSource by inject()
     val snapshotStore: SnapshotLocalDataSource by inject()
     val sessionStore: SessionLocalDataSource by inject()
     val snapshotBus: SnapshotBus by inject()
@@ -106,7 +108,7 @@ fun Application.module() {
     routing {
         healthRoutes(tokenStore)
         authRoutes(oauth, oauthState, tokenStore, webConfig)
-        vehicleRoutes(vehicles, energy, snapshotStore)
+        vehicleRoutes(vehicles, energy, locationDs, snapshotStore)
         sessionRoutes(sessionStore, snapshotStore)
         liveRoutes(snapshotBus)
         analyticsRoutes(analytics)

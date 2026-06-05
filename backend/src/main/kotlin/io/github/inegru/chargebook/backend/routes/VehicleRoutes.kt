@@ -2,6 +2,7 @@ package io.github.inegru.chargebook.backend.routes
 
 import io.github.inegru.chargebook.backend.persistence.SnapshotLocalDataSource
 import io.github.inegru.chargebook.shared.data.VolvoEnergyDataSource
+import io.github.inegru.chargebook.shared.data.VolvoLocationDataSource
 import io.github.inegru.chargebook.shared.data.VolvoVehiclesDataSource
 import io.github.inegru.chargebook.shared.error.DataError
 import io.github.inegru.chargebook.shared.result.Result
@@ -15,6 +16,7 @@ import io.ktor.server.routing.route
 fun Route.vehicleRoutes(
     vehicles: VolvoVehiclesDataSource,
     energy: VolvoEnergyDataSource,
+    location: VolvoLocationDataSource,
     snapshots: SnapshotLocalDataSource,
 ) {
     route("/api") {
@@ -33,6 +35,30 @@ fun Route.vehicleRoutes(
                             status = HttpStatusCode.NotFound,
                         )
                     handleResult(energy.rechargeStatus(vin))
+                }
+            }
+        }
+
+        get("/location/me") {
+            when (val v = vehicles.list()) {
+                is Result.Error -> respondNetworkError(v.error)
+                is Result.Success -> {
+                    val vin = v.data.firstOrNull()
+                        ?: return@get call.respondText(
+                            "No vehicles on this account",
+                            status = HttpStatusCode.NotFound,
+                        )
+                    when (val loc = location.currentLocation(vin)) {
+                        is Result.Error -> respondNetworkError(loc.error)
+                        is Result.Success -> {
+                            val point = loc.data
+                                ?: return@get call.respondText(
+                                    "Location currently unavailable",
+                                    status = HttpStatusCode.NotFound,
+                                )
+                            call.respond(point)
+                        }
+                    }
                 }
             }
         }

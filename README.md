@@ -56,6 +56,7 @@ Endpoints today:
 | `GET /api/vehicles` | Lists VINs the authenticated user has access to |
 | `GET /api/snapshot/me` | Live snapshot for the first VIN (calls Volvo on every request) |
 | `GET /api/snapshot/latest` | Most recent **persisted** snapshot — written by the polling loop |
+| `GET /api/location/me` | Current GPS position via Volvo's Location API (`{lat, lon}`) |
 | `GET /api/sessions` | List of detected charging sessions. `?vin=`, `?since=<iso>`, `?limit=` |
 | `GET /api/sessions/{id}` | One session plus all its persisted snapshots |
 | `PATCH /api/sessions/{id}` | Override tariff + solar contribution for a single session (see [Pricing](#pricing)) |
